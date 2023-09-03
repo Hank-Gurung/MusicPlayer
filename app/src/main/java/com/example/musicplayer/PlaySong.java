@@ -1,6 +1,7 @@
 package com.example.musicplayer;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 
 import android.content.Intent;
 import android.media.MediaPlayer;
@@ -90,22 +91,23 @@ public class PlaySong extends AppCompatActivity {
             }
         });
 
-        updateSeek = new Thread(){
-            public void run(){
-                int currentPosition = 0;
-                try{
-                    while (currentPosition<mediaPlayer.getDuration()){
-                        currentPosition = mediaPlayer.getCurrentPosition();
-                        seekBar.setProgress(currentPosition);
-                        sleep(800);
-                    }
-                }
-                catch(Exception e){
-                    e.printStackTrace();
-                }
-            }
-        };
-        updateSeek.start();
+
+//        updateSeek = new Thread(){
+//            public void run(){
+//                int currentPosition = 0;
+//                try{
+//                    while (currentPosition<mediaPlayer.getDuration()){
+//                        currentPosition = mediaPlayer.getCurrentPosition();
+//                        seekBar.setProgress(currentPosition);
+//                        sleep(800);
+//                    }
+//                }
+//                catch(Exception e){
+//                    e.printStackTrace();
+//                }
+//            }
+//        };
+//        updateSeek.start();
 
 //        play, pause, next, previous buttons
         pause.setOnClickListener(new View.OnClickListener() {
@@ -167,7 +169,6 @@ public class PlaySong extends AppCompatActivity {
 //        showing song name
         textContent = songs.get(position).getName().toString();
         textView.setText(textContent);
-
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {//to know if the song ended
             @Override
             public void onCompletion(MediaPlayer mp) {
@@ -181,15 +182,37 @@ public class PlaySong extends AppCompatActivity {
             }
         });
 
+
+        if (updateSeek != null && updateSeek.isAlive()){
+            updateSeek.interrupt();
+        }
+
+        // Then, start a new instance of the seekbar update thread.
+        updateSeek = new Thread(){
+            public void run(){
+                int currentPosition = 0;
+                try{
+                    while (currentPosition < mediaPlayer.getDuration()){
+                        currentPosition = mediaPlayer.getCurrentPosition();
+                        seekBar.setProgress(currentPosition);
+                        sleep(800);
+                    }
+                }
+                catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+        };
+        updateSeek.start();
     }
 
     public void nextSong(int position){//play next song automatically
         if(position!=songs.size()-1){
-                    position = position + 1;
+                    this.position = position + 1;
                 }else{
-                    position = 0;
+                    this.position = 0;
                 }
-        playMusic(position);
+        playMusic(this.position);
     }
 
     public String time(int allSec){//display song duration in min:sec format
